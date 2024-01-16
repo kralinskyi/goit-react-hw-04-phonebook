@@ -1,30 +1,53 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 
 import { nanoid } from 'nanoid';
 import './Form.css';
 
 const Form = ({ onFormSubmit }) => {
+  const [name, setName] = useState('');
+  const [number, setNumber] = useState('');
+
+  const handleChange = ({ target }) => {
+    const { name, value } = target;
+
+    if (name === 'name') {
+      setName(value);
+    } else if (name === 'number') {
+      setNumber(value);
+    }
+  };
+
   const handleSubmit = e => {
     e.preventDefault();
 
     const id = nanoid();
-    const name = e.currentTarget.elements.name.value;
-    const number = e.currentTarget.elements.number.value;
-
     onFormSubmit({ id, name, number });
-    e.currentTarget.reset();
+    setName('');
+    setNumber('');
   };
 
   return (
     <form className="form" onSubmit={handleSubmit}>
       <label htmlFor="name">
         <span className="label-span">Name</span>
-        <input type="text" name="name" required />
+        <input
+          type="text"
+          name="name"
+          value={name}
+          required
+          onChange={handleChange}
+        />
       </label>
       <label htmlFor="number">
         <span className="label-span">Phone</span>
-        <input type="tel" name="number" required />
+        <input
+          type="tel"
+          name="number"
+          value={number}
+          required
+          onChange={handleChange}
+        />
       </label>
       <button type="submit">Add contact</button>
     </form>

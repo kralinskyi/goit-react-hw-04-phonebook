@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import { useEffect, useState } from 'react';
 import Form from './Form';
 import Section from './Section';
 import Contacts from './Contacts';
@@ -7,107 +7,83 @@ import { nanoid } from 'nanoid';
 import { Notify } from 'notiflix';
 import Filter from './Filter';
 
-class App extends Component {
-  state = {
-    contacts: [
-      { id: nanoid(), name: 'Rosie Simpson', number: '459-12-56' },
-      { id: nanoid(), name: 'Hermione Kline', number: '443-89-12' },
-      { id: nanoid(), name: 'Eden Clements', number: '645-17-79' },
-      { id: nanoid(), name: 'Annie Copeland', number: '227-91-26' },
-    ],
-    filter: '',
-  };
+const startContacts = [
+  { id: nanoid(), name: 'Rosie Simpson', number: '459-12-56' },
+  { id: nanoid(), name: 'Hermione Kline', number: '443-89-12' },
+  { id: nanoid(), name: 'Eden Clements', number: '645-17-79' },
+  { id: nanoid(), name: 'Annie Copeland', number: '227-91-26' },
+];
 
-  STORAGE_KEY = 'contacts';
+const STORAGE_KEY = 'contacts';
 
-  componentDidMount() {
-    if (localStorage.getItem(this.STORAGE_KEY)) {
-      this.getContactsFromLocalStorage();
+const App = () => {
+  const [contacts, setContacts] = useState(startContacts);
+  const [filter, setFilter] = useState('');
+
+  useEffect(() => {
+    if (localStorage.getItem(STORAGE_KEY)) {
+      setContacts(JSON.parse(localStorage.getItem(STORAGE_KEY)));
     }
+  }, []);
 
-    this.setContactsToLocalStorage();
-  }
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(contacts));
+  }, [contacts]);
 
-  componentDidUpdate() {
-    this.setContactsToLocalStorage();
-  }
-
-  setContactsToLocalStorage = () => {
-    const { contacts } = this.state;
-
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(contacts));
-  };
-
-  getContactsFromLocalStorage = () => {
-    this.setState({
-      contacts: JSON.parse(localStorage.getItem(this.STORAGE_KEY)),
-    });
-  };
-
-  addContact = newContact => {
-    const { contacts } = this.state;
-
+  const addContact = newContact => {
     if (
-      contacts.filter(({ name }) => name === newContact.name).length &&
-      contacts.filter(({ number }) => number === newContact.number).length
+      contacts.some(({ name }) => name === newContact.name) &&
+      contacts.some(({ number }) => number === newContact.number)
     ) {
       Notify.failure('You have this contact in your book!');
       return;
     } else if (
-      contacts.filter(({ name }) => name === newContact.name).length ||
-      contacts.filter(({ number }) => number === newContact.number).length
+      contacts.some(({ name }) => name === newContact.name) ||
+      contacts.some(({ number }) => number === newContact.number)
     ) {
       Notify.warning('You have similar contact in your book!');
     }
 
-    this.setState(prevState => ({
-      contacts: [...prevState.contacts, newContact],
-    }));
+    setContacts(contacts => [...contacts, newContact]);
     Notify.success('New contact has been added to your book!');
   };
 
-  handleFilter = ({ target }) => {
+  const handleFilter = ({ target }) => {
     const { value } = target;
-    this.setState({ filter: value });
+    setFilter(value);
   };
 
-  filter = () => {
-    const { contacts, filter } = this.state;
+  const filterContacts = () => {
+    const normalizedFilter = filter.toLowerCase();
 
-    // новий масив, який містить всі контакти, що містять рядок пошуку
     return contacts.filter(
       ({ name, number }) =>
-        name.toLowerCase().includes(filter.toLowerCase()) ||
-        number.includes(filter)
+        name.toLowerCase().includes(normalizedFilter) ||
+        number.includes(normalizedFilter)
     );
   };
 
-  deleteContact = id => {
-    const { contacts } = this.state;
+  const deleteContact = id => {
+    contacts.filter(
+      item => item.id === id && Notify.info(`Contact ${item.name} was deleted`)
+    );
 
-    this.setState({
-      contacts: contacts.filter(item => item.id !== id),
-    });
+    setContacts(prevContacts => prevContacts.filter(item => item.id !== id));
   };
 
-  render() {
-    return (
-      <div className="app">
-        <Section title={'Phonebook'}>
-          <Form onFormSubmit={this.addContact} />
-        </Section>
+  return (
+    <div className="app">
+      <Section title={'Phonebook'}>
+        <Form onFormSubmit={addContact} />
+      </Section>
 
-        <Section title={'Contacts'}>
-          <h2 className="filter-title">Find contact by name</h2>
-          <Filter onFilter={this.handleFilter} filter={this.state.filter} />
-          <Contacts
-            contacts={this.filter()}
-            deleteContact={this.deleteContact}
-          />
-        </Section>
-      </div>
-    );
-  }
-}
+      <Section title={'Contacts'}>
+        <h2 className="filter-title">Find contact by name</h2>
+        <Filter onFilter={handleFilter} filter={filter} />
+        <Contacts contacts={filterContacts()} deleteContact={deleteContact} />
+      </Section>
+    </div>
+  );
+};
 
 export default App;
