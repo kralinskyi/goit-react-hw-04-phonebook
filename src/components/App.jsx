@@ -12,6 +12,7 @@ const startContacts = [
   { id: nanoid(), name: 'Hermione Kline', number: '443-89-12' },
   { id: nanoid(), name: 'Eden Clements', number: '645-17-79' },
   { id: nanoid(), name: 'Annie Copeland', number: '227-91-26' },
+  { id: nanoid(), name: 'Annie Moore', number: '227-91-27' },
 ];
 
 const STORAGE_KEY = 'contacts';
